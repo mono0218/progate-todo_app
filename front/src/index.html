@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TODO APP</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
+    />
+
+    <script>
+      async function TaskList(){
+        const response = await (await fetch("http://localhost:3000/tasks")).json()
+
+        response.sort((a, b) => {
+          return (a.id > b.id) ? -1 : 1;
+        });
+
+        for (let i = 0; i < response.length; ++i) {
+          if(response[i].status===1){
+            let task = document.getElementById('task-list');
+            let taskcontent =`<li class="task task--done" id=${response[i].id}> <div class="task__btn"></div> <div data-test="task-title" class="task__title">${response[i].title}</div> </li>`
+            task.insertAdjacentHTML("afterbegin",taskcontent)
+          }else{
+            let task = document.getElementById('task-list');
+            let taskcontent =`<li class="task task--todo" id=${response[i].id}> <div class="task__btn" id="task__btn"></div> <div data-test="task-title" class="task__title">${response[i].title}</div> </li>`
+            task.insertAdjacentHTML("afterbegin",taskcontent)
+          }
+        }
+      }
+
+      async function Submit(){
+        let SubmitBtn = document.getElementById('submit_btn');
+
+        SubmitBtn.addEventListener('click', async function () {
+          const a = document.form__body.title.value
+          await fetch('http://localhost:3000/add', {　 // 送信先URL
+            method: 'post', // 通信メソッド
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({title: a})
+          })
+          //submit()でフォームの内容を送信
+          document.form__body.submit();
+        })
+      }
+      let li = document.getElementsByClassName("task--todo")
+      async function DoneTask(){
+        for (let i=0; i < li.length; i++) {
+          li[i].addEventListener('click', async function () {
+            console.log(li)
+            console.log(li[i].id)
+            await fetch('http://localhost:3000/done', {　 // 送信先URL
+              method: 'post', // 通信メソッド
+              headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({id: li[i].id})
+            })
+            li[i].classList.replace("task--todo","task--done")
+            location.reload();
+          });
+        }
+      }
+      async function RemoveTask(){
+        let ClearBtn = document.getElementById("clear")
+        ClearBtn.addEventListener('click',async function(){
+          await fetch('http://localhost:3000/delete', {　 // 送信先URL
+            method: 'post', // 通信メソッド
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+          })
+          location.reload();
+        })
+      }
+      async function show_modal(){
+        if(!localStorage.getItem("modal")){
+          alert("Welcome to TODO APP")
+          localStorage.setItem("modal", "true");
+        }
+      }
+
+      TaskList()
+
+      window.addEventListener("load", (event) => {
+        RemoveTask()
+        Submit()
+        DoneTask()
+        show_modal()
+      });
+    </script>
+
+  </head>
+  <body>
+    <main>
+      <div class="container">
+        <h1 class="title">TODO APP</h1>
+
+        <form class="form" name="form__body">
+          <div class="form__body"  >
+            <input  class="form__title"  data-test="input-title" placeholder="Add your new todo" name="title" id="title" />
+            <button class="form__submit" data-test="submit" id="submit_btn"></button>
+          </div>
+        </form>
+
+        <ul class="task-list" id="task-list">
+        </ul>
+        <div class="clear" id="clear">
+          <div class="clear__btn">
+            <span class="clear__icon material-symbols-outlined">delete</span>
+            <span class="clear__title">clear all done tasks</span>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
